@@ -4,7 +4,7 @@ use std::net::TcpListener;
 use std::net::TcpStream;
 use std::thread;
 use std::time::Duration;
-
+use webserver::ThreadPool;
 fn handle_connection(mut stream: TcpStream) {
     let mut buffer = [0; 1024];
     stream.read(&mut buffer).unwrap();
@@ -34,16 +34,15 @@ fn handle_connection(mut stream: TcpStream) {
 }
 fn main() {
     let listener = TcpListener::bind("127.0.0.1:8000").unwrap();
-
+    let thread_pool = ThreadPool::new(5);
     for stream in listener.incoming() {
         match stream {
-            Ok(s) => {
+            Ok(s) => thread_pool.execute(|| {
                 handle_connection(s);
-            }
+            }),
             Err(x) => {
-                print!("Error mate");
+                print!("Error mate, {:?}", x);
             }
         }
     }
-    println!("Hello, world!");
 }
